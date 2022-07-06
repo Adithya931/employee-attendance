@@ -22,17 +22,17 @@ class AttendanceController extends Controller
     public function check(Request $request)
     {
         $request->validate([
-            'photo'          => 'required',
+            'image'          => 'required',
         ]);
 
-        $image = fopen($request->file('photo')->getPathName(), 'r');
-        $bytes = fread($image, $request->file('photo')->getSize());
+        $image = fopen($request->file('image')->getPathName(), 'r');
+        $bytes = fread($image, $request->file('image')->getSize());
 
         try {
             $client = new RekognitionClient(config('aws.recognition'));
 
             $result = $client->searchFacesByImage([
-                'CollectionId' => "employee-attendance", // REQUIRED
+                'CollectionId' => "employee.attendance", // REQUIRED
                 '`FaceMatchThreshold`' => 90.00,
                 'Image' => [ // REQUIRED
                     'Bytes' => $bytes,
@@ -45,6 +45,7 @@ class AttendanceController extends Controller
             $employee_id = $result['FaceMatches'][0]['Face']['ExternalImageId'];
 
             $guard = Employee::where('employee_id', $employee_id)->first();
+            return $guard;
         } catch (Exception $ex) {
 
             return response()->json([

@@ -52,12 +52,12 @@ class EmployeeController extends Controller
 
             $client = new RekognitionClient(config('aws.recognition'));
 
-            $image = fopen($request->file('photo')->getPathName(), 'r');
-            $bytes = fread($image, $request->file('photo')->getSize());
+            $image = fopen($request->file('image')->getPathName(), 'r');
+            $bytes = fread($image, $request->file('image')->getSize());
 
 
             $client->indexFaces([
-                'CollectionId' => "employee-attendance",
+                'CollectionId' => "employee.attendance",
                 'DetectionAttributes' => [],
                 'ExternalImageId' => $data['employee_id'],
                 'Image' => [ // REQUIRED
@@ -95,6 +95,12 @@ class EmployeeController extends Controller
     public function show(Employee $employee)
     {
         return $employee;
+
+        // $client = new RekognitionClient(config('aws.recognition'));
+        // return $client->listFaces([
+        //     'CollectionId' => 'employee.attendance',
+        //     // 'MaxResults' => 20,
+        // ]);
     }
 
     /**
