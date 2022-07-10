@@ -14,25 +14,26 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        return Attendance::whereBetween('check_in', [$request->from, $request->to])
+        return Attendance::with("employee")
+            ->whereBetween('check_in', [$request->from, $request->to])
             ->when($request->employee_id, function ($q) use ($request) {
                 return $q->where('employee_id', $request->employee_id);
             })
-            ->get();
+            ->get()->map(function ($item) {
+                $item->employee = $item->employee->makeHidden(['attendances']);
+                return $item;
+            });
     }
 
     public function check(Request $request)
     {
         $request->validate([
             'image'       => 'required',
-            // 'employee_id' => ['required', 'exists:employees,id'],
-            'mark' => ['required', 'boolean'],
         ]);
 
         $image = fopen($request->file('image')->getPathName(), 'r');
         $bytes = fread($image, $request->file('image')->getSize());
 
-        DB::beginTransaction();
         try {
             $client = new RekognitionClient(config('aws.recognition'));
 
@@ -45,45 +46,14 @@ class AttendanceController extends Controller
                 'MaxFaces' => 1,
             ]);
 
-
-            $similarity = $result['FaceMatches'][0]['Similarity'];
+            // $similarity = $result['FaceMatches'][0]['Similarity'];
             $employee_id = $result['FaceMatches'][0]['Face']['ExternalImageId'];
 
             $employee = Employee::where('employee_id', $employee_id)->first();
 
-            if ($request->mark) {
-                $data = $this->store($employee);
-                DB::commit();
-
-                if ($employee->status == "pending") {
-                    return response()->json([
-                        'message'  => "Employee Check In to work",
-                        'employee'       => $employee,
-                        'status'      => 'success'
-                    ], 200);
-                } else if ($employee->status == "on-duty") {
-                    return response()->json([
-                        'message'  => "Employee Check Out of work",
-                        'employee'       => $employee,
-                        'status'      => 'success'
-                    ], 200);
-                }
-
-                return response()->json([
-                    'message'  => "Employee work already completed",
-                    'employee'       => $employee,
-                    'status'      => 'success'
-                ], 200);
-            }
-
-            return response()->json([
-                'similarity'  => $similarity,
-                'employee'       => $employee,
-                'status'      => 'success'
-            ], 200);
+            return $employee;
         } catch (Exception $ex) {
 
-            DB::rollback();
             return response()->json([
                 'Message'      => 'Person not Found',
                 'status'       => 'error',
@@ -92,20 +62,44 @@ class AttendanceController extends Controller
         }
     }
 
-    public function store(Employee $employee)
+    public function store(Request $request, Employee $employee)
     {
+        // $request->validate([
+        //     // 'employee_id' => ['required', 'exists:employees,id'],
+        //     'mark' => ['required', 'boolean'],
+        // ]);
 
-        if ($employee->status == "pending") {
-            $employee->attendances()->create([
-                "check_in" => Carbon::now()
-            ]);
-        } else if ($employee->status == "on-duty") {
-            $attendance = $employee->attendances->where('check_in', Carbon::today())->first();
-            $attendance->update([
-                "check_out" => Carbon::now()
-            ]);
+        DB::beginTransaction();
+        try {
+
+            $message = "Employee already completed work";
+            if ($employee->status == "pending") {
+                $employee->attendances()->create([
+                    "check_in" => Carbon::now()
+                ]);
+                $message = "Employee Check In to work";
+            } else if ($employee->status == "on-duty") {
+                $attendance = $employee->attendances()->whereDate('check_in', Carbon::today())->first();
+                $attendance->update([
+                    "check_out" => Carbon::now()
+                ]);
+                $message = "Employee Check Out of work";
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => $message,
+                'code'    => 200,
+                'status'  => 'success'
+            ], 200);
+        } catch (Exception $ex) {
+
+            DB::rollback();
+            return response()->json([
+                'Message'   => 'Person not Found',
+                'status'    => 'error',
+                'exception' => $ex
+            ], 500);
         }
-
-        return $employee;
     }
 }

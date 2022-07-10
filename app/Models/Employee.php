@@ -47,7 +47,7 @@ class Employee extends Model
 
     public function getStatusAttribute()
     {
-        $attendance = $this->attendances->where('check_in', Carbon::today())->first();
+        $attendance = $this->attendances()->whereDate('check_in', Carbon::today())->first();
         if (!$attendance)
             return "pending";
 
