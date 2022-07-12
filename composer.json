@@ -16,7 +16,7 @@
         "laravel/tinker": "^2.5",
         "lcobucci/jwt": "^3.0",
         "spatie/laravel-permission": "5",
-        "fakerphp/faker": "^1.9.1",
+        "fakerphp/faker": "^1.9.1"
     },
     "require-dev": {
         "facade/ignition": "^1.16.15",
