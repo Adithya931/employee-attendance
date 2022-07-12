@@ -31,5 +31,5 @@ $factory->define(Employee::class, function (Faker $faker) {
 $factory->afterCreating(Employee::class, function ($employee, $faker) {
     $employee->employee_id = 'EMP' . $employee->id;
     $employee->save();
-    $employee->attendances()->createMany(factory(Attendance::class, 10)->make()->toArray());
+    // $employee->attendances()->createMany(factory(Attendance::class, 10)->make()->toArray());
 });
