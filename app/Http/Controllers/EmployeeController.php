@@ -76,8 +76,6 @@ class EmployeeController extends Controller
 
             DB::rollback();
 
-            report($ex);
-
             return response()->json([
                 'code'    => 500,
                 'message' => "Something Went Wrong..Please Try Again",
@@ -131,8 +129,6 @@ class EmployeeController extends Controller
         } catch (\Exception $ex) {
 
             DB::rollback();
-
-            report($ex);
 
             return response()->json([
                 'code'    => 500,

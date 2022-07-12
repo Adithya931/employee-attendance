@@ -25,6 +25,8 @@ Route::middleware(['auth:api'])->group(function () {
 
     Route::post('attendance', [AttendanceController::class, 'store']);
 
+    Route::delete('attendance', [AttendanceController::class, 'delete']);
+
     Route::post('attendance/check', [AttendanceController::class, 'check']);
 
     Route::apiResource('employee', EmployeeController::class);

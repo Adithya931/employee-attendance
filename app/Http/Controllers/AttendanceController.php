@@ -96,9 +96,32 @@ class AttendanceController extends Controller
 
             DB::rollback();
             return response()->json([
-                'Message'   => 'Person not Found',
-                'status'    => 'error',
-                'exception' => $ex
+                'code'    => 500,
+                'message' => "Something Went Wrong..Please Try Again",
+                'error'   => $ex->getMessage()
+            ], 500);
+        }
+    }
+
+    public function delete(Attendance $attendance)
+    {
+
+        DB::beginTransaction();
+        try {
+            $attendance->delete();
+            DB::commit();
+            return response()->json([
+                'message' => "Deleted",
+                'code'    => 200,
+                'status'  => 'success'
+            ], 200);
+        } catch (Exception $ex) {
+
+            DB::rollback();
+            return response()->json([
+                'code'    => 500,
+                'message' => "Something Went Wrong..Please Try Again",
+                'error'   => $ex->getMessage()
             ], 500);
         }
     }
