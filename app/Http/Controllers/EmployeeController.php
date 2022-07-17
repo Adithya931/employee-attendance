@@ -58,7 +58,7 @@ class EmployeeController extends Controller
 
             $data['image'] = $path;
             $data['employee_id'] = 'EMP' . ($inc_no + 1);
-            Employee::create($data);
+            $employee = Employee::create($data);
 
             $client = new RekognitionClient(config('aws.recognition'));
 
@@ -76,6 +76,7 @@ class EmployeeController extends Controller
 
             DB::commit();
 
+            return $employee;
             return response()->json([
                 'code' => 200,
                 'message' => "Employee Created Successfully!!",
