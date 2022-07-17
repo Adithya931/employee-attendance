@@ -37,9 +37,12 @@ class EmployeeController extends Controller
 
         try {
 
-            $path = $request->file('image')->store(
-                'employee/' . $request->user()->id
-            );
+            // $file = $request->file('image');
+
+            // $name = $file->getClientOriginalName();
+            // $extension = $file->getClientOriginalExtension();
+
+            $path = $request->file('image')->store('employee');
 
             if (!$path)
                 return response()->json([
@@ -48,15 +51,19 @@ class EmployeeController extends Controller
                     'status'   => "error"
                 ], 500);
 
+            $inc_no = 0;
+            $previous_employee = Employee::orderBy('id', 'desc')->first();
+            if ($previous_employee)
+                $inc_no = $previous_employee->id;
+
             $data['image'] = $path;
-            $data['employee_id'] = 'EMP' . (Employee::orderBy('id', 'desc')->first()->id + 1);
+            $data['employee_id'] = 'EMP' . ($inc_no + 1);
             Employee::create($data);
 
             $client = new RekognitionClient(config('aws.recognition'));
 
             $image = fopen($request->file('image')->getPathName(), 'r');
             $bytes = fread($image, $request->file('image')->getSize());
-
 
             $client->indexFaces([
                 'CollectionId' => "employee.attendance",
