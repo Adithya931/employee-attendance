@@ -17,7 +17,9 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        return Employee::with('attendances')->get(['id', 'employee_id', 'name'])->makeHidden('attendances');
+        return response()->json([
+            'data'      => Employee::with('attendances')->get(['id', 'employee_id', 'name'])->makeHidden('attendances')
+        ], 200);
     }
 
     /**

@@ -14,7 +14,7 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        return Attendance::with("employee")
+        $employees = Attendance::with("employee")
             ->whereBetween('check_in', [$request->from, $request->to])
             ->when($request->employee_id, function ($q) use ($request) {
                 return $q->where('employee_id', $request->employee_id);
@@ -23,6 +23,10 @@ class AttendanceController extends Controller
                 $item->employee = $item->employee->makeHidden(['attendances']);
                 return $item;
             });
+
+        return response()->json([
+            'data'      => $employees
+        ], 200);
     }
 
     public function check(Request $request)
@@ -51,7 +55,10 @@ class AttendanceController extends Controller
 
             $employee = Employee::where('employee_id', $employee_id)->first();
 
-            return $employee;
+            // return $employee;
+            return response()->json([
+                'data'      => [$employee]
+            ], 200);
         } catch (Exception $ex) {
 
             return response()->json([
