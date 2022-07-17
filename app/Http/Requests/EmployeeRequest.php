@@ -46,17 +46,11 @@ class EmployeeRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+            'image' => [
+                'required',
+                'file',
+            ],
         ];
-
-        if (Request::isMethod('post')) {
-
-            $rules += [
-                'image' => [
-                    'required',
-                    'file',
-                ],
-            ];
-        }
 
         return $rules;
     }
