@@ -36,6 +36,7 @@ class EmployeeController extends Controller
         DB::beginTransaction();
 
         try {
+            return config('aws.recognition');
 
             // $file = $request->file('image');
 
