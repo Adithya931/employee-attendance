@@ -57,8 +57,11 @@ class EmployeeController extends Controller
                 $inc_no = $previous_employee->id;
 
             $data['image'] = $path;
-            $data['employee_id'] = 'EMP' . ($inc_no + 1);
+            $data['employee_id'] = 'EMP';
             $employee = Employee::create($data);
+
+            $employee->employee_id = $employee->employee_id.$employee->id;
+            $employee->save();
 
             $client = new RekognitionClient(config('aws.recognition'));
 
@@ -68,7 +71,7 @@ class EmployeeController extends Controller
             $client->indexFaces([
                 'CollectionId' => "employee.attendance",
                 'DetectionAttributes' => [],
-                'ExternalImageId' => $data['employee_id'],
+                'ExternalImageId' => $employee->employee_id,
                 'Image' => [ // REQUIRED
                     'Bytes' => $bytes,
                 ],
@@ -157,8 +160,7 @@ class EmployeeController extends Controller
     public function destroy(Employee $employee)
     {
 
-
-        if ($employee->attendances)
+        if ($employee->attendances->count())
             return response()->json([
                 'code'    => 500,
                 'message' => "Can't delete employee with attendance",
