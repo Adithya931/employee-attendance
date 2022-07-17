@@ -65,7 +65,7 @@ class AttendanceController extends Controller
                 'Message'      => 'Person not Found',
                 'status'       => 'error',
                 'exception' => $ex
-            ], 500);
+            ], 404);
         }
     }
 
