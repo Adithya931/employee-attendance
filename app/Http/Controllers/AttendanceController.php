@@ -34,15 +34,26 @@ class AttendanceController extends Controller
             return $item->check_in->format('Y-m-d');
         });
 
-        $attendances = $attendances->map(function ($item, $key) {
-            return collect([
-                'date' => $key,
-                'attendances' => $item
-            ]);
-        });
+        $data = collect();
+
+        // $attendances = $attendances->map(function ($item, $key) {
+        //     return collect([
+        //         'date' => $key,
+        //         'attendances' => $item
+        //     ])->values();
+        // })->values();
+
+        foreach ($attendances as $key => $attendance) {
+            $data->push(
+                [
+                    'date' => $key,
+                    'attendances' => $attendance
+                ]
+            );
+        }
 
         return response()->json([
-            'data'      => $attendances
+            'data'      => $data
         ], 200);
     }
 
