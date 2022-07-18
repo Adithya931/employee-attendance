@@ -36,13 +36,6 @@ class AttendanceController extends Controller
 
         $data = collect();
 
-        // $attendances = $attendances->map(function ($item, $key) {
-        //     return collect([
-        //         'date' => $key,
-        //         'attendances' => $item
-        //     ])->values();
-        // })->values();
-
         foreach ($attendances as $key => $attendance) {
             $data->push(
                 [
@@ -59,6 +52,7 @@ class AttendanceController extends Controller
 
     public function check(Request $request)
     {
+        return url('app/employee/gRLjl1bHEPrzlHmDnTp8w7cWYtiIWpIFHRCUrdwa.jpg');
         $request->validate([
             'image'       => 'required',
         ]);
@@ -78,12 +72,15 @@ class AttendanceController extends Controller
                 'MaxFaces' => 1,
             ]);
 
-            // $similarity = $result['FaceMatches'][0]['Similarity'];
             $employee_id = $result['FaceMatches'][0]['Face']['ExternalImageId'];
 
             $employee = Employee::where('employee_id', $employee_id)->first();
+            if (!$employee)
+                return response()->json([
+                    'Message'      => 'Person not Found',
+                    'status'       => 'error'
+                ], 404);
 
-            // return $employee;
             return response()->json([
                 'data'      => [$employee]
             ], 200);

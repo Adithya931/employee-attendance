@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\EmployeeRequest;
 use Aws\Rekognition\RekognitionClient;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
@@ -37,10 +38,26 @@ class EmployeeController extends Controller
 
         try {
 
-            // $file = $request->file('image');
+            $client = new RekognitionClient(config('aws.recognition'));
 
-            // $name = $file->getClientOriginalName();
-            // $extension = $file->getClientOriginalExtension();
+            $image = fopen($request->file('image')->getPathName(), 'r');
+            $bytes = fread($image, $request->file('image')->getSize());
+
+            $result = $client->searchFacesByImage([
+                'CollectionId' => "employee.attendance", // REQUIRED
+                '`FaceMatchThreshold`' => 90.00,
+                'Image' => [ // REQUIRED
+                    'Bytes' => $bytes,
+                ],
+                'MaxFaces' => 1,
+            ]);
+
+            if (count($result['FaceMatches']))
+                return response()->json([
+                    'code'    => 500,
+                    'message' => "Employee Image Already Exists!!",
+                    'status'   => "error"
+                ], 500);
 
             $path = $request->file('image')->store('employee');
 
@@ -51,24 +68,15 @@ class EmployeeController extends Controller
                     'status'   => "error"
                 ], 500);
 
-            $inc_no = 0;
-            $previous_employee = Employee::orderBy('id', 'desc')->first();
-            if ($previous_employee)
-                $inc_no = $previous_employee->id;
-
             $data['image'] = $path;
             $data['employee_id'] = 'EMP';
+
             $employee = Employee::create($data);
 
-            $employee->employee_id = $employee->employee_id.$employee->id;
+            $employee->employee_id = $employee->employee_id . $employee->id;
             $employee->save();
 
-            $client = new RekognitionClient(config('aws.recognition'));
-
-            $image = fopen($request->file('image')->getPathName(), 'r');
-            $bytes = fread($image, $request->file('image')->getSize());
-
-            $client->indexFaces([
+            $result = $client->indexFaces([
                 'CollectionId' => "employee.attendance",
                 'DetectionAttributes' => [],
                 'ExternalImageId' => $employee->employee_id,
@@ -77,14 +85,12 @@ class EmployeeController extends Controller
                 ],
             ]);
 
+            $employee->faceId = $result['FaceMatches'][0]['Face']['FaceId'];
+            $employee->save();
+
             DB::commit();
 
             return $employee;
-            return response()->json([
-                'code' => 200,
-                'message' => "Employee Created Successfully!!",
-                'status' => "success"
-            ], 200);
         } catch (\Exception $ex) {
 
             DB::rollback();
@@ -105,13 +111,8 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
+        $employee->image = 'storage/' . $employee->image;
         return $employee;
-
-        // $client = new RekognitionClient(config('aws.recognition'));
-        // return $client->listFaces([
-        //     'CollectionId' => 'employee.attendance',
-        //     // 'MaxResults' => 20,
-        // ]);
     }
 
     /**
@@ -167,9 +168,20 @@ class EmployeeController extends Controller
                 'status'   => "error"
             ], 500);
 
+
         DB::beginTransaction();
 
         try {
+
+            $client = new RekognitionClient(config('aws.recognition'));
+
+            $client->deleteFaces([
+                'CollectionId' => "employee.attendance", // REQUIRED
+                'FaceIds' => [$employee->faceId], // REQUIRED
+            ]);
+
+            if (Storage::exists($employee->image))
+                Storage::delete($employee->image);
 
             $employee->delete();
 

@@ -46,6 +46,11 @@ class EmployeeRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+            'gender' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
             'image' => [
                 'required',
                 'file',
