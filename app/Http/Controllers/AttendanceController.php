@@ -30,9 +30,16 @@ class AttendanceController extends Controller
             return $attendance;
         });
 
-        $attendances = $attendances->groupBy(function($item) {
+        $attendances = $attendances->groupBy(function ($item) {
             return $item->check_in->format('Y-m-d');
-       });
+        });
+
+        $attendances = $attendances->map(function ($item, $key) {
+            return collect([
+                'date' => $key,
+                'attendances' => $item
+            ]);
+        });
 
         return response()->json([
             'data'      => $attendances
