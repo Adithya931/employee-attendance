@@ -62,7 +62,6 @@
             "@php artisan key:generate --ansi"
         ],
         "post-install-cmd": [
-            "cp .env.example .env",
             "php artisan clear-compiled",
             "chmod -R 777 storage",
             "php artisan passport:keys"
