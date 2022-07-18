@@ -25,7 +25,7 @@ class AttendanceController extends Controller
             });
 
         $attendances = $attendances->map(function ($attendance) {
-            $attendance->employee_name = $attendance->employee->name;
+            $attendance->name = $attendance->employee->name;
             $attendance->employee_id = $attendance->employee->employee_id;
             return $attendance;
         });
