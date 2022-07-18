@@ -14,7 +14,7 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $employees = Attendance::with("employee")
+        $attendances = Attendance::with("employee")
             ->whereBetween('check_in', [$request->from, $request->to])
             ->when($request->employee_id, function ($q) use ($request) {
                 return $q->where('employee_id', $request->employee_id);
@@ -24,8 +24,17 @@ class AttendanceController extends Controller
                 return $item;
             });
 
+        $attendances = $attendances->map(function ($attendance) {
+            $attendance->employee_name = $attendance->employee->name;
+            return $attendance;
+        });
+
+        $attendances = $attendances->groupBy(function($item) {
+            return $item->check_in->format('Y-m-d');
+       });
+
         return response()->json([
-            'data'      => $employees
+            'data'      => $attendances
         ], 200);
     }
 
