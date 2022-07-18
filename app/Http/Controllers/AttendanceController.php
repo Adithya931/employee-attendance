@@ -69,15 +69,16 @@ class AttendanceController extends Controller
         }
     }
 
-    public function store(Request $request, Employee $employee)
+    public function store(Request $request)
     {
-        // $request->validate([
-        //     // 'employee_id' => ['required', 'exists:employees,id'],
-        //     'mark' => ['required', 'boolean'],
-        // ]);
+        $request->validate([
+            'employee_id' => ['required', 'exists:employees,id'],
+        ]);
 
         DB::beginTransaction();
         try {
+
+            $employee = Employee::find($request->employee_id);
 
             $message = "Employee already completed work";
             if ($employee->status == "pending") {
