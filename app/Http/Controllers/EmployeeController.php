@@ -32,6 +32,7 @@ class EmployeeController extends Controller
      */
     public function store(EmployeeRequest $request)
     {
+
         $data = $request->validated();
 
         DB::beginTransaction();
@@ -127,7 +128,7 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->image = 'storage/' . $employee->image;
+        $employee->image = '/storage/' . $employee->image;
         return $employee;
     }
 
