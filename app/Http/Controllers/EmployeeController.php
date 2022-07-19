@@ -107,6 +107,11 @@ class EmployeeController extends Controller
 
             DB::commit();
 
+            $employee->image = Storage::temporaryUrl(
+                $employee->image,
+                now()->addMinutes(30)
+            );
+
             return $employee;
         } catch (\Exception $ex) {
 
@@ -128,7 +133,11 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->image = '/storage/' . $employee->image;
+        $employee->image = Storage::temporaryUrl(
+            $employee->image,
+            now()->addMinutes(30)
+        );
+
         return $employee;
     }
 
