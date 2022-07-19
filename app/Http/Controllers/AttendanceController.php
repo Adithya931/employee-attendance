@@ -52,7 +52,6 @@ class AttendanceController extends Controller
 
     public function check(Request $request)
     {
-        return url('app/employee/gRLjl1bHEPrzlHmDnTp8w7cWYtiIWpIFHRCUrdwa.jpg');
         $request->validate([
             'image'       => 'required',
         ]);
@@ -144,7 +143,7 @@ class AttendanceController extends Controller
             $attendance->delete();
             DB::commit();
             return response()->json([
-                'message' => "Deleted",
+                'message' => "Attendance Deleted",
                 'code'    => 200,
                 'status'  => 'success'
             ], 200);

@@ -21,6 +21,8 @@ class Employee extends Model
         'image',
         'is_active',
         'is_suspended',
+        'gender',
+        'faceId'
     ];
 
     /**

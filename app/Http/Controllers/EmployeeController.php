@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\EmployeeRequest;
@@ -31,7 +32,6 @@ class EmployeeController extends Controller
      */
     public function store(EmployeeRequest $request)
     {
-
         $data = $request->validated();
 
         DB::beginTransaction();
@@ -40,8 +40,19 @@ class EmployeeController extends Controller
 
             $client = new RekognitionClient(config('aws.recognition'));
 
-            $image = fopen($request->file('image')->getPathName(), 'r');
-            $bytes = fread($image, $request->file('image')->getSize());
+            // return $client->listFaces([
+            //     'CollectionId' => "employee.attendance", // REQUIRED
+            // ]);
+
+            // return $client->deleteFaces([
+            //     'CollectionId' => "employee.attendance", // REQUIRED
+            //     'FaceIds' => ["7e9681e7-7c32-4d59-a7ec-8156418c0d6e"], // REQUIRED
+            // ]);
+
+            $file = $request->file('image');
+
+            $image = fopen($file->getPathName(), 'r');
+            $bytes = fread($image, $file->getSize());
 
             $result = $client->searchFacesByImage([
                 'CollectionId' => "employee.attendance", // REQUIRED
@@ -59,7 +70,12 @@ class EmployeeController extends Controller
                     'status'   => "error"
                 ], 500);
 
-            $path = $request->file('image')->store('employee');
+            // return $result;
+
+            $path = $file->storeAs(
+                'employee',
+                Str::uuid()->toString() . "." . $file->extension()
+            );
 
             if (!$path)
                 return response()->json([
@@ -73,19 +89,19 @@ class EmployeeController extends Controller
 
             $employee = Employee::create($data);
 
-            $employee->employee_id = $employee->employee_id . $employee->id;
-            $employee->save();
+            $employee_id = $employee->employee_id . $employee->id;
 
             $result = $client->indexFaces([
                 'CollectionId' => "employee.attendance",
                 'DetectionAttributes' => [],
-                'ExternalImageId' => $employee->employee_id,
+                'ExternalImageId' => $employee_id,
                 'Image' => [ // REQUIRED
                     'Bytes' => $bytes,
                 ],
             ]);
 
-            $employee->faceId = $result['FaceMatches'][0]['Face']['FaceId'];
+            $employee->employee_id = $employee_id;
+            $employee->faceId = $result['FaceRecords'][0]['Face']['FaceId'];
             $employee->save();
 
             DB::commit();
